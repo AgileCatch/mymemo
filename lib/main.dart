@@ -63,14 +63,21 @@ class _HomePageState extends State<HomePage> {
                       // 메모 고정 아이콘,클릭시
                       leading: IconButton(
                         icon: Icon(
-                          CupertinoIcons.pin,
-                          color: memo.isPinned
-                              ? Color.fromARGB(255, 255, 0, 0)
-                              : null,
+                          memo.isPinned
+                              ? CupertinoIcons.pin_fill
+                              : CupertinoIcons.pin,
                         ),
                         onPressed: () {
                           setState(() {
                             memo.isPinned = !memo.isPinned;
+
+                            if (memo.isPinned) {
+                              sortedMemos.removeAt(index);
+                              sortedMemos.insert(0, memo);
+                            } else {
+                              sortedMemos.removeAt(index);
+                              sortedMemos.add(memo);
+                            }
                           });
                           print('$memo : pin 클릭 됨');
                         },
