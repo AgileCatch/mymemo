@@ -2,7 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => MemoService()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -127,7 +134,9 @@ class DetailPage extends StatelessWidget {
                       // 확인 버튼
                       TextButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          memoList.removeAt(index); // index에 해당하는 항목 삭제
+                          Navigator.pop(context); // 팝업 닫기
+                          Navigator.pop(context); // HomePage 로 가기
                         },
                         child: Text(
                           "확인",
