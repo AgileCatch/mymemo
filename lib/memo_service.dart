@@ -50,6 +50,10 @@ class MemoService extends ChangeNotifier {
   updateMemo({required int index, required String content}) {
     Memo memo = memoList[index];
     memo.content = content;
+    memo.time = DateTime.now();
+    if (memo.content.isEmpty) {
+      deleteMemo(index: index);
+    }
     notifyListeners();
     saveMemoList();
   }

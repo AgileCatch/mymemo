@@ -77,17 +77,19 @@ class _HomePageState extends State<HomePage> {
                               : CupertinoIcons.pin,
                         ),
                         onPressed: () {
-                          setState(() {
-                            memo.isPinned = !memo.isPinned;
+                          setState(
+                            () {
+                              memo.isPinned = !memo.isPinned;
 
-                            if (memo.isPinned) {
-                              sortedMemos.removeAt(index);
-                              sortedMemos.insert(0, memo);
-                            } else {
-                              sortedMemos.removeAt(index);
-                              sortedMemos.add(memo);
-                            }
-                          });
+                              if (memo.isPinned) {
+                                sortedMemos.removeAt(index);
+                                sortedMemos.insert(0, memo);
+                              } else {
+                                sortedMemos.removeAt(index);
+                                sortedMemos.add(memo);
+                              }
+                            },
+                          );
                           print('$memo : pin 클릭 됨');
                         },
                       ),
@@ -114,6 +116,13 @@ class _HomePageState extends State<HomePage> {
                           MaterialPageRoute(
                             builder: (_) => DetailPage(
                               index: index,
+                              onDelete: () {
+                                // 메모 내용이 비어있을 경우 해당 메모를 삭제
+                                if (memoService
+                                    .memoList[index].content.isEmpty) {
+                                  memoService.deleteMemo(index: index);
+                                }
+                              },
                             ),
                           ),
                         );
@@ -126,11 +135,19 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               // + 버튼 클릭시 메모 생성 및 수정 페이지로 이동
               memoService.createMemo(content: '');
+              int newIndex = memoService.memoList.length - 1; // 새로 생성된 메모의 인덱스
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => DetailPage(
-                    index: memoService.memoList.length - 1,
+                    index: newIndex,
+                    onDelete: () {
+                      // 메모 내용이 비어있을 경우 해당 메모를 삭제
+                      if (memoService.memoList[newIndex].content.isEmpty) {
+                        memoService.deleteMemo(index: newIndex);
+                      }
+                    },
                   ),
                 ),
               );
@@ -144,9 +161,10 @@ class _HomePageState extends State<HomePage> {
 
 // 메모 생성 및 수정 페이지
 class DetailPage extends StatelessWidget {
-  DetailPage({super.key, required this.index});
-
   final int index;
+  final Function onDelete;
+
+  DetailPage({required this.index, required this.onDelete});
 
   TextEditingController contentController = TextEditingController();
 
@@ -163,7 +181,6 @@ class DetailPage extends StatelessWidget {
           IconButton(
             onPressed: () {
               // 삭제 버튼 클릭시
-
               showDeleteDialog(context, memoService);
             },
             icon: Icon(Icons.delete),
