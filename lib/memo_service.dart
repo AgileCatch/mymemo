@@ -8,14 +8,15 @@ import 'main.dart';
 // Memo 데이터의 형식을 정해줍니다. 추후 isPinned, updatedAt 등의 정보도 저장할 수 있습니다.
 class Memo {
   bool isPinned; // 색바꾸기추가
-  bool isTop;
+  bool isTop; // 상단고정
+  DateTime time; // 시간설정
 
   Memo({
     required this.content,
     this.isPinned = true,
     this.isTop = false,
     // 기본값이 폴스
-  });
+  }) : time = DateTime.now(); // 현재 시간으로 초기화
 
   String content;
 

@@ -1,0 +1,4 @@
+#Mon Jun 26 21:35:46 KST 2023
+base.0=/Users/gim-yeonghyeon/Desktop/flutter/mymemo/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

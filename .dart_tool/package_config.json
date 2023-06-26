@@ -80,6 +80,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///Users/gim-yeonghyeon/.pub-cache/hosted/pub.dev/intl-0.17.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "js",
       "rootUri": "file:///Users/gim-yeonghyeon/.pub-cache/hosted/pub.dev/js-0.6.7",
       "packageUri": "lib/",
@@ -272,7 +278,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2023-06-26T10:17:18.997005Z",
+  "generated": "2023-06-26T12:29:02.735019Z",
   "generator": "pub",
   "generatorVersion": "3.0.5"
 }

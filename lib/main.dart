@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 import 'memo_service.dart';
 
@@ -47,7 +48,15 @@ class _HomePageState extends State<HomePage> {
       builder: (context, memoService, child) {
         // memoService로 부터 memoList 가져오기
         List<Memo> memoList = memoService.memoList;
-        List<Memo> sortedMemos = memoList.toList(); // 고정시키기위한 함수추가
+
+        // 위쪽에 고정된 메모와 고정되지 않은 메모를 분리하여 처리
+        List<Memo> pinnedMemos =
+            memoList.where((memo) => memo.isPinned).toList();
+        List<Memo> unpinnedMemos =
+            memoList.where((memo) => !memo.isPinned).toList();
+
+        // 위쪽에 고정된 메모를 우선적으로 보여주기 위해 합침
+        List<Memo> sortedMemos = [...pinnedMemos, ...unpinnedMemos];
 
         return Scaffold(
           appBar: AppBar(
@@ -56,9 +65,9 @@ class _HomePageState extends State<HomePage> {
           body: memoList.isEmpty
               ? Center(child: Text("메모를 작성해 주세요"))
               : ListView.builder(
-                  itemCount: memoList.length, // memoList 개수 만큼 보여주기
+                  itemCount: sortedMemos.length, // memoList 개수 만큼 보여주기 수정됨
                   itemBuilder: (context, index) {
-                    Memo memo = memoList[index]; // index에 해당하는 memo 가져오기
+                    Memo memo = sortedMemos[index]; // index에 해당하는 memo 가져오기
                     return ListTile(
                       // 메모 고정 아이콘,클릭시
                       leading: IconButton(
@@ -83,10 +92,20 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       // 메모 내용 (최대 3줄까지만 보여주도록)
-                      title: Text(
-                        memo.content,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceBetween, // 시간과 날짜를 오른쪽으로 정렬하기 위해 사용
+                        children: [
+                          Text(
+                            memo.content,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            // 시간추가
+                            DateFormat('yyyy-MM-dd HH:mm').format(memo.time),
+                          ),
+                        ],
                       ),
                       onTap: () {
                         // 아이템 클릭시
