@@ -1,31 +1,36 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'main.dart';
 
 // Memo 데이터의 형식을 정해줍니다. 추후 isPinned, updatedAt 등의 정보도 저장할 수 있습니다.
 class Memo {
-  bool isPinned; // 색바꾸기추가
-  bool isTop; // 상단고정
-  DateTime time; // 시간설정
-
   Memo({
     required this.content,
-    this.isPinned = true,
-    this.isTop = false,
-    // 기본값이 폴스
-  }) : time = DateTime.now(); // 현재 시간으로 초기화
+    this.isPinned = false,
+    this.updatedAt,
+  });
 
   String content;
+  bool isPinned;
+  DateTime? updatedAt;
 
   Map toJson() {
-    return {'content': content};
+    return {
+      'content': content,
+      'isPinned': isPinned,
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
   }
 
   factory Memo.fromJson(json) {
-    return Memo(content: json['content']);
+    return Memo(
+      content: json['content'],
+      isPinned: json['isPinned'] ?? false,
+      updatedAt:
+          json['updatedAt'] == null ? null : DateTime.parse(json['updatedAt']),
+    );
   }
 }
 
@@ -41,19 +46,27 @@ class MemoService extends ChangeNotifier {
   ];
 
   createMemo({required String content}) {
-    Memo memo = Memo(content: content);
+    Memo memo = Memo(content: content, updatedAt: DateTime.now());
     memoList.add(memo);
-    notifyListeners();
-    saveMemoList(); // Consumer<MemoService>의 builder 부분을 호출해서 화면 새로고침
+    notifyListeners(); // Consumer<MemoService>의 builder 부분을 호출해서 화면 새로고침
+    saveMemoList();
   }
 
   updateMemo({required int index, required String content}) {
     Memo memo = memoList[index];
     memo.content = content;
-    memo.time = DateTime.now();
-    if (memo.content.isEmpty) {
-      deleteMemo(index: index);
-    }
+    memo.updatedAt = DateTime.now();
+    notifyListeners();
+    saveMemoList();
+  }
+
+  updatePinMemo({required int index}) {
+    Memo memo = memoList[index];
+    memo.isPinned = !memo.isPinned;
+    memoList = [
+      ...memoList.where((element) => element.isPinned),
+      ...memoList.where((element) => !element.isPinned)
+    ];
     notifyListeners();
     saveMemoList();
   }

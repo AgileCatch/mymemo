@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 import 'memo_service.dart';
 
@@ -49,15 +48,6 @@ class _HomePageState extends State<HomePage> {
         // memoService로 부터 memoList 가져오기
         List<Memo> memoList = memoService.memoList;
 
-        // 위쪽에 고정된 메모와 고정되지 않은 메모를 분리하여 처리
-        List<Memo> pinnedMemos =
-            memoList.where((memo) => memo.isPinned).toList();
-        List<Memo> unpinnedMemos =
-            memoList.where((memo) => !memo.isPinned).toList();
-
-        // 위쪽에 고정된 메모를 우선적으로 보여주기 위해 합침
-        List<Memo> sortedMemos = [...pinnedMemos, ...unpinnedMemos];
-
         return Scaffold(
           appBar: AppBar(
             title: Text("mymemo"),
@@ -65,92 +55,61 @@ class _HomePageState extends State<HomePage> {
           body: memoList.isEmpty
               ? Center(child: Text("메모를 작성해 주세요"))
               : ListView.builder(
-                  itemCount: sortedMemos.length, // memoList 개수 만큼 보여주기 수정됨
+                  itemCount: memoList.length, // memoList 개수 만큼 보여주기
                   itemBuilder: (context, index) {
-                    Memo memo = sortedMemos[index]; // index에 해당하는 memo 가져오기
+                    Memo memo = memoList[index]; // index에 해당하는 memo 가져오기
                     return ListTile(
-                      // 메모 고정 아이콘,클릭시
+                      // 메모 고정 아이콘
                       leading: IconButton(
-                        icon: Icon(
-                          memo.isPinned
-                              ? CupertinoIcons.pin_fill
-                              : CupertinoIcons.pin,
-                        ),
+                        icon: Icon(memo.isPinned
+                            ? CupertinoIcons.pin_fill
+                            : CupertinoIcons.pin),
                         onPressed: () {
-                          setState(
-                            () {
-                              memo.isPinned = !memo.isPinned;
-
-                              if (memo.isPinned) {
-                                sortedMemos.removeAt(index);
-                                sortedMemos.insert(0, memo);
-                              } else {
-                                sortedMemos.removeAt(index);
-                                sortedMemos.add(memo);
-                              }
-                            },
-                          );
-                          print('$memo : pin 클릭 됨');
+                          memoService.updatePinMemo(index: index);
                         },
                       ),
                       // 메모 내용 (최대 3줄까지만 보여주도록)
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .spaceBetween, // 시간과 날짜를 오른쪽으로 정렬하기 위해 사용
-                        children: [
-                          Text(
-                            memo.content,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            // 시간추가
-                            DateFormat('yyyy-MM-dd HH:mm').format(memo.time),
-                          ),
-                        ],
+                      title: Text(
+                        memo.content,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      onTap: () {
+                      trailing: Text(memo.updatedAt == null
+                          ? ""
+                          : memo.updatedAt.toString().substring(0, 19)),
+                      onTap: () async {
                         // 아이템 클릭시
-                        Navigator.push(
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => DetailPage(
                               index: index,
-                              onDelete: () {
-                                // 메모 내용이 비어있을 경우 해당 메모를 삭제
-                                if (memoService
-                                    .memoList[index].content.isEmpty) {
-                                  memoService.deleteMemo(index: index);
-                                }
-                              },
                             ),
                           ),
                         );
+                        if (memo.content.isEmpty) {
+                          memoService.deleteMemo(index: index);
+                        }
                       },
                     );
                   },
                 ),
           floatingActionButton: FloatingActionButton(
             child: Icon(Icons.add),
-            onPressed: () {
+            onPressed: () async {
               // + 버튼 클릭시 메모 생성 및 수정 페이지로 이동
               memoService.createMemo(content: '');
-              int newIndex = memoService.memoList.length - 1; // 새로 생성된 메모의 인덱스
-
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => DetailPage(
-                    index: newIndex,
-                    onDelete: () {
-                      // 메모 내용이 비어있을 경우 해당 메모를 삭제
-                      if (memoService.memoList[newIndex].content.isEmpty) {
-                        memoService.deleteMemo(index: newIndex);
-                      }
-                    },
+                    index: memoService.memoList.length - 1,
                   ),
                 ),
               );
+              if (memoList[memoService.memoList.length - 1].content.isEmpty) {
+                memoService.deleteMemo(index: memoList.length - 1);
+              }
             },
           ),
         );
@@ -161,10 +120,9 @@ class _HomePageState extends State<HomePage> {
 
 // 메모 생성 및 수정 페이지
 class DetailPage extends StatelessWidget {
-  final int index;
-  final Function onDelete;
+  DetailPage({super.key, required this.index});
 
-  DetailPage({required this.index, required this.onDelete});
+  final int index;
 
   TextEditingController contentController = TextEditingController();
 
@@ -213,6 +171,7 @@ class DetailPage extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
+          title: Text("정말로 삭제하시겠습니까?"),
           actions: [
             // 취소 버튼
             TextButton(
@@ -234,7 +193,6 @@ class DetailPage extends StatelessWidget {
               ),
             ),
           ],
-          title: Text("정말로 삭제하시겠습니까?"),
         );
       },
     );
